@@ -1,4 +1,3 @@
-
 def bfs(queue,visited,graph):
     if queue:
         cur_node = queue.popleft()

@@ -5,7 +5,7 @@ from random import random
 from collections import deque
 import bfs_helper as graph_helper
 
-size = 40
+size = 20
 tile = 20
 
 pg.init()
@@ -63,20 +63,13 @@ while True:
     for x,y in queue:
         pg.draw.rect(sc, pg.Color('darkslategray'), get_rect(x, y))
     
-    
-    # print(queue)
-    # BFS logic
     if queue:
-        cur_node = queue.popleft()
-        print(cur_node)
-        next_nodes = graph[cur_node]
-
-        for next_node in next_nodes:
-            if next_node not in visited:
-                queue.append(next_node)
-                visited[next_node] = cur_node
+        #call bfs function for explore all paths
+        visited = graph_helper.bfs(queue,visited,graph)
     
+    path_head, path_segment = cur_node,cur_node
+
     #Display pygames window
     [exit() for event in pg.event.get() if event.type == pg.QUIT]
     pg.display.flip()
-    clock.tick(7)
+    clock.tick(50)
