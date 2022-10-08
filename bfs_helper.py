@@ -7,4 +7,4 @@ def bfs(queue,visited,graph):
             if next_node not in visited:
                 queue.append(next_node)
                 visited[next_node] = cur_node
-    return visited
+    return visited,cur_node
