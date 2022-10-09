@@ -11,7 +11,7 @@ import obstacles as obs
 from heapq import *
 import dijkstra as djk
 
-size = 40
+size = 3
 tile = 20
 speed = 10
 
@@ -40,21 +40,13 @@ def rules_next_nodes(x,y,diagonal):
 surface = pg.display.set_mode([size * tile,size * tile])
 clock = pg.time.Clock()
 
-# 0 and 1 matrix grid
-# for row in range(size):
-#     for col in range(size):
-#         grid = [[1 if random() < 0.2 else 0]]
-# Settings
-# start_x = 3
-# start_y = 3
-
-# BFS settings
-start = (20, 20)
-goal = (11, 2)
+# Data for calculate Dijkstra
+start = (0, 0)
+goal = (size - 1, size - 1) # N - 1 Sucker!!
 allowDiagonals = False
-print(start[0])
-grid = [['99999999' if random() < 0.2 and (col != start[0] and row != start[0]) 
-        and (col != goal[0] and row != goal[1]) else '1' for col in range(size)] for row in range(size)]
+
+grid = [['9999999999' if random() < 0.2 and (col != start[0] and row != start[1]) and
+(col != goal[0] and row != goal[1]) else '1' for col in range(size)] for row in range(size)]
 
 # grid = []
 
@@ -79,11 +71,14 @@ visited = {start: None}
 while True:
     #Screen
     surface.fill(pg.Color('black'))
+
+    #Obstacles
     obs.draw_obstacles(grid,get_rect,tile,surface,pg)
+
     # draw BFS work
-    [pg.draw.rect(surface, pg.Color('ghostwhite'), get_rect(x, y), 1) for x, y in visited]
+    [pg.draw.rect(surface, pg.Color('forestgreen'), get_rect(x, y), 1) for x, y in visited]
     [pg.draw.rect(surface, pg.Color('darkslategray'), get_rect(*xy)) for _, xy in queue]
-    pg.draw.circle(surface, pg.Color('purple'), *get_circle(*goal))
+    pg.draw.circle(surface,pg.Color('purple'), *get_circle(*goal))
 
     # Dijkstra logic
     if queue:
@@ -109,6 +104,10 @@ while True:
         path_segment = visited[path_segment]
     pg.draw.circle(surface, pg.Color('blue'), *get_circle(*start))
     pg.draw.circle(surface, pg.Color('magenta'), *get_circle(*path_head))
+
+    # while cur_node != start:
+    #     cur_node = visited[cur_node]
+    #     print(f'---> {cur_node} ', end='')
 
     #Display pygames window
     [exit() for event in pg.event.get() if event.type == pg.QUIT]
