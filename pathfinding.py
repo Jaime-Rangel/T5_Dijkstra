@@ -1,7 +1,8 @@
+from cmath import sqrt
 import enum
 from importlib.resources import path
 from turtle import Screen
-from numpy import gradient
+from numpy import gradient, mat
 import pygame as pg
 from random import random
 from collections import deque
@@ -10,8 +11,9 @@ import bfs_helper as graph_helper
 import obstacles as obs
 from heapq import *
 import dijkstra as djk
+import math
 
-size = 3
+size = 40
 tile = 20
 speed = 10
 
@@ -31,10 +33,26 @@ def rules_next_nodes(x,y,diagonal):
     if diagonal == False:
         ways = [-1, 0],[0, -1],[1, 0],[0, 1]
     else:
-        ways = [-1, 0],[0, -1],[1, 0],[0, 1],[-1,1],[1,1],[-1,-1],[1,-1]
+        ways = [-1, 0],[0, -1],[1, 0],[0, 1], [-1,1], [1,1], [-1,-1], [1,-1]
 
+    listPesos = []
 
-    return [(grid[y + dy][x + dx], (x + dx, y + dy)) for dx, dy in ways if check_next_node(x + dx, y + dy)]
+    for dx, dy in ways:
+        # whe check the constraints sizes for array
+        if check_next_node(x + dx, y + dy):
+            if (dx == -1 and dy == 1) or (dx == 1 and dy == 1) or (dx == -1 and dy == -1) or (dx == 1 and dy ==-1):
+                if(grid[y + dy][x + dx] != 9999999999):
+                    listPesos.append([(math.sqrt(2)),(x + dx, y + dy)])
+            else:
+                listPesos.append([(grid[y + dy][x + dx]),(x + dx, y + dy)])
+
+            #[(grid[y + dy][x + dx], (x + dx, y + dy))]
+        # print(dx,dy)
+
+    return listPesos
+    # return [(grid[y + dy][x + dx], (x + dx, y + dy)) for dx, dy in ways if check_next_node(x + dx, y + dy) 
+    # if (dx == -1 and dy == 1)]
+    #return [(grid[y + dy][x + dx], (x + dx, y + dy)) for dx, dy in ways if check_next_node(x + dx, y + dy)]
 
 #Size of the working window
 surface = pg.display.set_mode([size * tile,size * tile])
@@ -42,11 +60,11 @@ clock = pg.time.Clock()
 
 # Data for calculate Dijkstra
 start = (0, 0)
-goal = (size - 1, size - 1) # N - 1 Sucker!!
-allowDiagonals = False
+goal = (30,16) # N - 1 Sucker!!
+allowDiagonals = True
 
-grid = [['9999999999' if random() < 0.2 and (col != start[0] and row != start[1]) and
-(col != goal[0] and row != goal[1]) else '1' for col in range(size)] for row in range(size)]
+grid = [['9999999999' if random() < 0.4 and (col != start[1] and row != start[0]) and
+(col != goal[1] and row != goal[0]) else '1' for col in range(size)] for row in range(size)]
 
 # grid = []
 
@@ -60,9 +78,12 @@ grid = [[int(char) for char in string ] for string in grid]
 graph = {}
 for y, row in enumerate(grid):
     for x, col in enumerate(row):
-        graph[(x, y)] = graph.get((x, y), []) + rules_next_nodes(x, y, allowDiagonals)
+        #Create a dictionary for paussible movements in the array
+        what = rules_next_nodes(x, y, allowDiagonals)
+        #what = graph.get((x, y), [])        
+        graph[(x, y)] = rules_next_nodes(x, y, allowDiagonals)
 
-
+print(graph)
 queue = []
 heappush(queue, (0, start))
 cost_visited = {start: 0}
@@ -78,18 +99,26 @@ while True:
     # draw BFS work
     [pg.draw.rect(surface, pg.Color('forestgreen'), get_rect(x, y), 1) for x, y in visited]
     [pg.draw.rect(surface, pg.Color('darkslategray'), get_rect(*xy)) for _, xy in queue]
-    pg.draw.circle(surface,pg.Color('purple'), *get_circle(*goal))
+    pg.draw.circle(surface,pg.Color('orange'), *get_circle(goal[1],goal[0]))
 
     # Dijkstra logic
     if queue:
         cur_cost, cur_node = heappop(queue)
-        if cur_node == goal:
+        inv_goal = (goal[1],goal[0])
+
+        if cur_node == inv_goal:
             queue = []
+            print("Longitud:",cost_visited.get(inv_goal))
+            #print(cost_visited)
+            # for x in cost_visited:
+            #     if(x[0] == x[])
             continue
 
         next_nodes = graph[cur_node]
+
         for next_node in next_nodes:
             neigh_cost, neigh_node = next_node
+
             new_cost = cost_visited[cur_node] + neigh_cost
 
             if neigh_node not in cost_visited or new_cost < cost_visited[neigh_node]:
@@ -103,11 +132,7 @@ while True:
         pg.draw.circle(surface, pg.Color('dodgerblue'), *get_circle(*path_segment))
         path_segment = visited[path_segment]
     pg.draw.circle(surface, pg.Color('blue'), *get_circle(*start))
-    pg.draw.circle(surface, pg.Color('magenta'), *get_circle(*path_head))
-
-    # while cur_node != start:
-    #     cur_node = visited[cur_node]
-    #     print(f'---> {cur_node} ', end='')
+    pg.draw.circle(surface, pg.Color('yellow'), *get_circle(*path_head))
 
     #Display pygames window
     [exit() for event in pg.event.get() if event.type == pg.QUIT]
